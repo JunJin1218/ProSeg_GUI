@@ -17,6 +17,8 @@ import { Box, Loader2, Scan, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+const DEFAULT_MODEL_NAME = "checkpoint_10_MedSAM2_US_Heart.pt";
+
 const Index = () => {
   const [slices, setSlices] = useState<DicomSlice[]>([]);
   const [currentSliceIdx, setCurrentSliceIdx] = useState(0);
@@ -46,7 +48,9 @@ const Index = () => {
         if (cancelled) return;
         setModelNames(models);
         if (!selectedModelName && models.length > 0) {
-          setSelectedModelName(models[0]);
+          setSelectedModelName(
+            models.includes(DEFAULT_MODEL_NAME) ? DEFAULT_MODEL_NAME : models[0],
+          );
         }
       })
       .catch(() => {
