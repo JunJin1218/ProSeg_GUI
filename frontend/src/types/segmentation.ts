@@ -28,8 +28,19 @@ export interface SegmentationMask {
   errors?: Record<number, boolean>;
 }
 
+export interface BoundingBoxPrompt {
+  classId: number;
+  sliceIndex: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
 export interface PredictionResult {
   masks: SegmentationMask[];
+  model?: string;
+  predictorType?: string;
 }
 
 export const SEGMENTATION_CLASSES: SegmentationClass[] = [

@@ -1,21 +1,26 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /workspace
 
-# Install system dependencies for OpenCV strictly required by ultralytics
+# Install system dependencies for OpenCV and uv bootstrap.
 RUN apt-get update && apt-get install -y \
+    curl \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies first for Docker layer caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --from=ghcr.io/astral-sh/uv:0.7.19 /uv /usr/local/bin/uv
 
-# Copy the application source code and model weights (.pt files)
-COPY . .
+# Copy dependency metadata first for better layer caching.
+COPY pyproject.toml uv.lock ./
+ARG UV_EXTRA=cpu
+RUN uv sync --frozen --no-dev --extra ${UV_EXTRA}
+
+# Copy the application source code and model weights after dependencies.
+COPY app ./app
+COPY MedSAM2_models ./MedSAM2_models
+COPY checkpoint_10_MedSAM2_US_Heart.pt ./checkpoint_10_MedSAM2_US_Heart.pt
 
 EXPOSE 8000
 
-# Run FastAPI backend with Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
